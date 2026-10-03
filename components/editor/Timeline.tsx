@@ -9,6 +9,7 @@ import {
   ArrowRightToLine,
   ArrowUp,
   ClipboardPaste,
+  Contrast,
   Copy,
   CopyPlus,
   Eye,
@@ -23,7 +24,7 @@ import {
 } from 'lucide-react'
 import { useProjectStore } from '../../lib/store/projectStore'
 import { compositeFrame, pixelsToImageData } from '../../lib/canvas/compositing'
-import type { Frame } from '../../lib/types'
+import type { Frame, Layer } from '../../lib/types'
 
 const FPS_OPTIONS = [1, 2, 4, 6, 8, 10, 12, 15, 20, 24, 30, 60]
 // Empty trailing slots so the strip reads as a timeline you can fill rather
@@ -63,7 +64,7 @@ function FrameThumbnail({
     // The eye icon hides a layer on the canvas being drawn on, not in the
     // timeline, so this cell always shows its layer's pixels. compositeFrame
     // skips layers marked invisible, hence a stand-in layer that is visible.
-    const pixels = compositeFrame(frame, [{ id: layerId, name: '', visible: true }], width, height)
+    const pixels = compositeFrame(frame, [{ id: layerId, name: '', visible: true, opacity: 1 }], width, height)
     ctx.imageSmoothingEnabled = false
     ctx.putImageData(pixelsToImageData(pixels, width, height), 0, 0)
     // frame.layerPixels holds the actual pixel data; frame identity alone
@@ -81,6 +82,40 @@ function FrameThumbnail({
       // where it is being drawn
       className="checkerboard h-full w-full"
       style={{ imageRendering: 'pixelated', backgroundSize: '6px 6px' }}
+    />
+  )
+}
+
+function LayerOpacityInput({ layer }: { layer: Layer }) {
+  const setLayerOpacity = useProjectStore((s) => s.setLayerOpacity)
+  const setActiveLayer = useProjectStore((s) => s.setActiveLayer)
+  // Raw text kept locally so the field can be emptied mid-edit; re-syncs from
+  // the store whenever the opacity changes from anywhere else.
+  const [text, setText] = useState(() => String(Math.round(layer.opacity * 100)))
+  const [syncedOpacity, setSyncedOpacity] = useState(layer.opacity)
+  if (layer.opacity !== syncedOpacity) {
+    setSyncedOpacity(layer.opacity)
+    setText(String(Math.round(layer.opacity * 100)))
+  }
+  return (
+    <input
+      type="number"
+      min={0}
+      max={100}
+      step={1}
+      aria-label={`Opacity of ${layer.name} in percent`}
+      title={`Opacity of ${layer.name} (0–100%)`}
+      className="w-12 shrink-0 rounded bg-neutral-900 px-1.5 py-0.5 text-right text-xs tabular-nums text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value)
+        const value = Number(e.target.value)
+        if (e.target.value === '' || Number.isNaN(value)) return
+        setLayerOpacity(layer.id, Math.min(100, Math.max(0, value)) / 100)
+      }}
+      onBlur={() => setText(String(Math.round(layer.opacity * 100)))}
+      onClick={(e) => e.stopPropagation()}
+      onFocus={() => setActiveLayer(layer.id)}
     />
   )
 }
@@ -377,6 +412,13 @@ export function Timeline() {
                   onFocus={() => setActiveLayer(layer.id)}
                   onClick={(e) => e.stopPropagation()}
                 />
+                <div className="flex-1" />
+                <Contrast
+                  className="h-3.5 w-3.5 shrink-0 text-neutral-500"
+                  aria-hidden="true"
+                />
+                <LayerOpacityInput layer={layer} />
+                <span className="text-xs text-neutral-500">%</span>
               </div>
 
               {Array.from({ length: columnCount }, (_, frameIndex) => {

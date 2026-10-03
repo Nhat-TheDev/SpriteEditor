@@ -205,6 +205,21 @@ describe('layer actions', () => {
     expect(useProjectStore.getState().project.layers[0].visible).toBe(false)
   })
 
+  it('setLayerOpacity updates the layer opacity and marks the project dirty', () => {
+    const layerId = useProjectStore.getState().project.layers[0].id
+    useProjectStore.getState().setLayerOpacity(layerId, 0.4)
+    expect(useProjectStore.getState().project.layers[0].opacity).toBe(0.4)
+    expect(useProjectStore.getState().isDirty).toBe(true)
+  })
+
+  it('setLayerOpacity clamps values outside [0, 1]', () => {
+    const layerId = useProjectStore.getState().project.layers[0].id
+    useProjectStore.getState().setLayerOpacity(layerId, 1.5)
+    expect(useProjectStore.getState().project.layers[0].opacity).toBe(1)
+    useProjectStore.getState().setLayerOpacity(layerId, -0.2)
+    expect(useProjectStore.getState().project.layers[0].opacity).toBe(0)
+  })
+
   it('renameLayer updates the layer name', () => {
     const layerId = useProjectStore.getState().project.layers[0].id
     useProjectStore.getState().renameLayer(layerId, 'Outline')

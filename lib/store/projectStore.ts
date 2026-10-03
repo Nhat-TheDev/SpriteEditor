@@ -61,7 +61,7 @@ function nextId(prefix: string): string {
 }
 
 export function createEmptyProject(name: string, width: number, height: number): Project {
-  const layer: Layer = { id: nextId('layer'), name: 'Layer 1', visible: true }
+  const layer: Layer = { id: nextId('layer'), name: 'Layer 1', visible: true, opacity: 1 }
   return {
     name,
     width,
@@ -129,6 +129,7 @@ interface ProjectStoreState {
   addLayer: () => void
   removeLayer: (id: string) => void
   toggleLayerVisibility: (id: string) => void
+  setLayerOpacity: (id: string, opacity: number) => void
   renameLayer: (id: string, name: string) => void
   setActiveLayer: (id: string) => void
   reorderLayer: (fromIndex: number, toIndex: number) => void
@@ -350,7 +351,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   addLayer: () =>
     set((state) => {
       const { project } = state
-      const layer: Layer = { id: nextId('layer'), name: `Layer ${project.layers.length + 1}`, visible: true }
+      const layer: Layer = { id: nextId('layer'), name: `Layer ${project.layers.length + 1}`, visible: true, opacity: 1 }
       const nextLayers = [...project.layers, layer]
       const nextFrames = project.frames.map((f) => ({
         ...f,
@@ -379,6 +380,17 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         ...state.project,
         layers: state.project.layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
       },
+    })),
+
+  setLayerOpacity: (id, opacity) =>
+    set((state) => ({
+      project: {
+        ...state.project,
+        layers: state.project.layers.map((l) =>
+          l.id === id ? { ...l, opacity: Math.min(1, Math.max(0, opacity)) } : l
+        ),
+      },
+      isDirty: true,
     })),
 
   renameLayer: (id, name) =>

@@ -14,7 +14,16 @@ export function deserializeProject(json: string): Project {
   if (!isValidProject(parsed)) {
     throw new Error('Invalid project file')
   }
-  return parsed
+  // Older files predate layer opacity — default it to fully opaque.
+  return {
+    ...parsed,
+    layers: parsed.layers.map((layer) => ({
+      ...layer,
+      opacity: typeof layer.opacity === 'number' && !Number.isNaN(layer.opacity)
+        ? Math.min(1, Math.max(0, layer.opacity))
+        : 1,
+    })),
+  }
 }
 
 function isValidProject(value: unknown): value is Project {

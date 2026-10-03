@@ -17,6 +17,8 @@ export interface Layer {
   id: string
   name: string
   visible: boolean
+  /** 0 (fully transparent) to 1 (fully opaque) */
+  opacity: number
 }
 
 export interface Frame {
