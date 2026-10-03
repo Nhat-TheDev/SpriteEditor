@@ -12,9 +12,24 @@ interface NewProjectDialogProps {
 export function NewProjectDialog({ open, onClose }: NewProjectDialogProps) {
   const newProject = useProjectStore((s) => s.newProject)
   const [name, setName] = useState('Untitled')
-  const [width, setWidth] = useState(32)
-  const [height, setHeight] = useState(32)
+  const [width, setWidth] = useState('32')
+  const [height, setHeight] = useState('32')
   const titleId = useId()
+
+  // Keep the raw digits in state so clearing the field doesn't snap back to
+  // "0", and strip leading zeros while typing ("032" -> "32").
+  function handleNumberChange(
+    value: string,
+    setter: (v: string) => void,
+  ) {
+    const digits = value.replace(/[^0-9]/g, '')
+    setter(digits.replace(/^0+(?=\d)/, ''))
+  }
+
+  function applyPreset(size: number) {
+    setWidth(String(size))
+    setHeight(String(size))
+  }
 
   if (!open) return null
 
@@ -31,6 +46,18 @@ export function NewProjectDialog({ open, onClose }: NewProjectDialogProps) {
             onChange={(e) => setName(e.target.value)}
           />
         </label>
+        <div className="flex gap-1" aria-label="Size presets">
+          {[16, 32, 64, 128].map((size) => (
+            <button
+              key={size}
+              type="button"
+              className="rounded bg-neutral-900 px-2 py-1 text-xs text-neutral-300 transition-colors duration-150 hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              onClick={() => applyPreset(size)}
+            >
+              {size}x{size}
+            </button>
+          ))}
+        </div>
         <label className="flex flex-col gap-1 text-sm text-neutral-300">
           Width
           <input
@@ -38,7 +65,7 @@ export function NewProjectDialog({ open, onClose }: NewProjectDialogProps) {
             type="number"
             className="rounded bg-neutral-900 px-2 py-1 text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             value={width}
-            onChange={(e) => setWidth(Number(e.target.value))}
+            onChange={(e) => handleNumberChange(e.target.value, setWidth)}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm text-neutral-300">
@@ -48,7 +75,7 @@ export function NewProjectDialog({ open, onClose }: NewProjectDialogProps) {
             type="number"
             className="rounded bg-neutral-900 px-2 py-1 text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             value={height}
-            onChange={(e) => setHeight(Number(e.target.value))}
+            onChange={(e) => handleNumberChange(e.target.value, setHeight)}
           />
         </label>
         <div className="flex justify-end gap-2">
@@ -63,7 +90,7 @@ export function NewProjectDialog({ open, onClose }: NewProjectDialogProps) {
             type="button"
             className="rounded bg-accent px-3 py-1 text-sm text-on-accent transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
             onClick={() => {
-              newProject(name, width, height)
+              newProject(name, Number(width) || 32, Number(height) || 32)
               onClose()
             }}
           >

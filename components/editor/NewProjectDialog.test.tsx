@@ -57,4 +57,17 @@ describe('NewProjectDialog', () => {
     expect(project.height).toBe(24)
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('fills both size inputs when a preset is clicked', () => {
+    render(<NewProjectDialog open={true} onClose={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: '64x64' }))
+    expect(screen.getByLabelText(/width/i)).toHaveValue(64)
+    expect(screen.getByLabelText(/height/i)).toHaveValue(64)
+  })
+
+  it('strips leading zeros while typing in the size inputs', () => {
+    render(<NewProjectDialog open={true} onClose={() => {}} />)
+    fireEvent.change(screen.getByLabelText(/width/i), { target: { value: '032' } })
+    expect(screen.getByLabelText(/width/i)).toHaveValue(32)
+  })
 })
