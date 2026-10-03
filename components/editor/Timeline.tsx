@@ -9,6 +9,7 @@ import {
   ArrowRightToLine,
   ArrowUp,
   ClipboardPaste,
+  Contrast,
   Copy,
   CopyPlus,
   Eye,
@@ -63,7 +64,7 @@ function FrameThumbnail({
     // The eye icon hides a layer on the canvas being drawn on, not in the
     // timeline, so this cell always shows its layer's pixels. compositeFrame
     // skips layers marked invisible, hence a stand-in layer that is visible.
-    const pixels = compositeFrame(frame, [{ id: layerId, name: '', visible: true }], width, height)
+    const pixels = compositeFrame(frame, [{ id: layerId, name: '', visible: true, opacity: 1 }], width, height)
     ctx.imageSmoothingEnabled = false
     ctx.putImageData(pixelsToImageData(pixels, width, height), 0, 0)
     // frame.layerPixels holds the actual pixel data; frame identity alone
@@ -107,6 +108,7 @@ export function Timeline() {
   const renameLayer = useProjectStore((s) => s.renameLayer)
   const setActiveLayer = useProjectStore((s) => s.setActiveLayer)
   const toggleLayerVisibility = useProjectStore((s) => s.toggleLayerVisibility)
+  const setLayerOpacity = useProjectStore((s) => s.setLayerOpacity)
   const reorderLayer = useProjectStore((s) => s.reorderLayer)
   const onionSkin = useProjectStore((s) => s.onionSkin)
   const toggleOnionSkin = useProjectStore((s) => s.toggleOnionSkin)
@@ -377,6 +379,30 @@ export function Timeline() {
                   onFocus={() => setActiveLayer(layer.id)}
                   onClick={(e) => e.stopPropagation()}
                 />
+                {/* spacer pushes the opacity control to the right of the name */}
+                <div className="flex-1" />
+                <Contrast
+                  className="h-3.5 w-3.5 shrink-0 text-neutral-500"
+                  aria-hidden="true"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  aria-label={`Opacity of ${layer.name} in percent`}
+                  title={`Opacity of ${layer.name} (0–100%)`}
+                  className="w-12 shrink-0 rounded bg-neutral-900 px-1.5 py-0.5 text-right text-xs tabular-nums text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  value={Math.round(layer.opacity * 100)}
+                  onChange={(e) => {
+                    const value = Number(e.target.value)
+                    if (e.target.value === '' || Number.isNaN(value)) return
+                    setLayerOpacity(layer.id, Math.min(100, Math.max(0, value)) / 100)
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={() => setActiveLayer(layer.id)}
+                />
+                <span className="text-xs text-neutral-500">%</span>
               </div>
 
               {Array.from({ length: columnCount }, (_, frameIndex) => {
