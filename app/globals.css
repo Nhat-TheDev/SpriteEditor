@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+:root {
+  --background: #171717;
+  --foreground: #f5f5f5;
+  --accent: #06b6d4;
+  /* white on --accent is 2.43:1; the dark surface colour is 7.38:1 */
+  --on-accent: var(--background);
+  --danger: #f87171;
+  --checker-light: #fff;
+  --checker-dark: #ccc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Transparency checker shared by the canvas and the timeline thumbnails; each
+   sets its own background-size so one square is one sprite pixel. */
+.checkerboard {
+  background-color: var(--checker-light);
+  background-image: conic-gradient(
+    var(--checker-dark) 90deg,
+    transparent 90deg 180deg,
+    var(--checker-dark) 180deg 270deg,
+    transparent 270deg
+  );
+}
+
+/* Transparent-track range slider: only a custom thumb is drawn, so it sits
+   directly on the gradient div behind it instead of a browser-default
+   track/thumb pair fighting the gradient for visibility and hit area. */
+.gradient-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gradient-slider::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+}
+
+.gradient-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--foreground);
+  border: 2px solid var(--background);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+  margin-top: -6px;
+}
+
+.gradient-slider::-moz-range-track {
+  height: 6px;
+  background: transparent;
+}
+
+.gradient-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--foreground);
+  border: 2px solid var(--background);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
